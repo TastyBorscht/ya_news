@@ -1,12 +1,11 @@
 from datetime import timedelta
 
 import pytest
-
 from django.test.client import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from news.models import News, Comment
+from news.models import Comment, News
 from yanews import settings
 
 
@@ -43,7 +42,7 @@ def not_author_client(reader):
 def comment(author, news):
     comment = Comment.objects.create(
         news=news,
-        text='Текст заметки',
+        text='Изначальный и трансцендентный Текст коммента',
         author=author,
     )
     return comment
@@ -65,11 +64,11 @@ def bulk_of_news():
         News(title=f'Новость {index}', text='Просто текст.')
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
-    return News.objects.bulk_create(all_news)
+    News.objects.bulk_create(all_news)
 
 
 @pytest.fixture
-def bulk_of_comments(news,author):
+def bulk_of_comments(news, author):
     now = timezone.now()
     for index in range(10):
         comment = Comment.objects.create(
@@ -82,3 +81,8 @@ def bulk_of_comments(news,author):
 @pytest.fixture
 def detail_url(id_for_news):
     return reverse('news:detail', args=id_for_news)
+
+
+@pytest.fixture
+def comment_form_data():
+    return {'text': 'тестовый текст'}

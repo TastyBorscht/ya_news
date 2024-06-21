@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from news.forms import CommentForm
-from news.models import News, Comment
+from news.models import Comment, News
 
 User = get_user_model()
 
@@ -28,7 +28,8 @@ class TestHomePage(TestCase):
         News.objects.bulk_create(all_news)
 
     def test_news_count(self):
-        news_count = self.client.get(self.HOME_URL).context['object_list'].count()
+        news_count = self.client.get(
+            self.HOME_URL).context['object_list'].count()
         self.assertEqual(news_count, settings.NEWS_COUNT_ON_HOME_PAGE)
 
     def test_news_order(self):

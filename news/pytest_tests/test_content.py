@@ -1,17 +1,16 @@
 import pytest
 from django.conf import settings
-
 from django.urls import reverse
 
 from news.forms import CommentForm
 
 
 @pytest.mark.django_db
-def test_home_page(bulk_of_news, client):
+@pytest.mark.usefixtures('bulk_of_news')
+def test_home_page(client):
     assert (client.get(reverse('news:home')
-                       ).context[
-                'object_list'
-            ].count() == settings.NEWS_COUNT_ON_HOME_PAGE)
+                       ).context['object_list'].count() == (
+            settings.NEWS_COUNT_ON_HOME_PAGE))
 
 
 @pytest.mark.django_db
@@ -23,7 +22,8 @@ def test_news_order(client):
 
 
 @pytest.mark.django_db
-def test_comments_order(client, news, bulk_of_comments, id_for_news):
+@pytest.mark.usefixtures('bulk_of_comments', 'news')
+def test_comments_order(client, id_for_news):
     response = client.get(reverse('news:detail', args=id_for_news))
     assert 'news' in response.context
     all_comments = response.context['news'].comment_set.all()
@@ -39,7 +39,7 @@ def test_anonymous_client_has_no_form(client, detail_url):
 
 
 @pytest.mark.django_db
-def test_authorized_client_has_form(author_client,detail_url):
+def test_authorized_client_has_form(author_client, detail_url):
     response = author_client.get(detail_url)
     assert 'form' in response.context
     assert isinstance(response.context['form'], CommentForm)
