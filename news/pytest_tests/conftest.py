@@ -1,12 +1,13 @@
 from datetime import timedelta
 
 import pytest
+from django.conf import settings
 from django.test.client import Client
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.datetime_safe import datetime
 
 from news.models import Comment, News
-from yanews import settings
 
 
 @pytest.fixture
@@ -22,6 +23,12 @@ def author(django_user_model):
 @pytest.fixture
 def reader(django_user_model):
     return django_user_model.objects.create(username='Читатель простой')
+
+
+@pytest.fixture
+def unauthorized_client():
+    client = Client()
+    return client
 
 
 @pytest.fixture
@@ -49,19 +56,48 @@ def comment(author, news):
 
 
 @pytest.fixture
-def id_for_news(news):
-    return (news.id,)
+def home_url():
+    return reverse('news:home')
 
 
 @pytest.fixture
-def id_for_comment(comment):
-    return (comment.id,)
+def detail_url(news):
+    return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture
+def edit_comment_url(comment):
+    return reverse('news:edit', args=(comment.id,))
+
+
+@pytest.fixture
+def delete_comment_url(comment):
+    return reverse('news:delete', args=(comment.id,))
+
+
+@pytest.fixture
+def users_login_url():
+    return reverse('users:login')
+
+
+@pytest.fixture
+def users_logout_url():
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def users_signup_url():
+    return reverse('users:signup')
 
 
 @pytest.fixture
 def bulk_of_news():
     all_news = [
-        News(title=f'Новость {index}', text='Просто текст.')
+        News(
+            title=f'Новость {index}',
+            text='Просто текст.',
+            date=datetime.today() - timedelta(days=index)
+        )
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     News.objects.bulk_create(all_news)
@@ -76,13 +112,3 @@ def bulk_of_comments(news, author):
         )
         comment.created = now + timedelta(days=index)
         comment.save()
-
-
-@pytest.fixture
-def detail_url(id_for_news):
-    return reverse('news:detail', args=id_for_news)
-
-
-@pytest.fixture
-def comment_form_data():
-    return {'text': 'тестовый текст'}
